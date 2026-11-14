@@ -29,9 +29,7 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-
                 .formLogin(form -> form.disable())
-
                 .httpBasic(basic -> basic.disable())
 
                 .sessionManagement(session ->
@@ -42,9 +40,26 @@ public class SecurityConfig {
                         .accessDeniedHandler(jsonAccessDeniedHandler))
 
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/patients/register").permitAll()
-                        .anyRequest().authenticated())
+
+                        .requestMatchers(HttpMethod.POST, "/api/staff")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/staff")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/patients/**")
+                        .hasAnyRole("ADMIN", "DOCTOR")
+
+                        .requestMatchers("/api/appointments/**")
+                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+
+                        .requestMatchers("/api/medical-records/**")
+                        .hasAnyRole("ADMIN", "DOCTOR")
+
+                        .anyRequest().authenticated()
+                )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -63,7 +78,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration
     ) throws Exception {
-
         return configuration.getAuthenticationManager();
     }
 }
